@@ -13,6 +13,18 @@
         android:theme="@style/Theme.Abdulkadir_Project_Drema"
         tools:targetApi="31">
         <activity
+            android:name=".Anasayfa"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".HesapOlustur"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name=".GirisYap"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

@@ -1,5 +1,6 @@
 package com.drema.abdulkadir_project_drema
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -48,7 +49,9 @@ class MainActivity : ComponentActivity() {
         }
         val girisButton = Button(this).apply {
             setOnClickListener {
-                Toast.makeText(this@MainActivity, "You clicked meG.", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@MainActivity, GirisYap::class.java)
+                startActivity(intent)
+                //Toast.makeText(this@MainActivity, "You clicked meG.", Toast.LENGTH_SHORT).show()
             }
                 setBackgroundColor(Color.parseColor("#916DD5"))
             text = "Giriş Yap"
@@ -56,7 +59,8 @@ class MainActivity : ComponentActivity() {
 
         val hesapOlusturButton = Button(this).apply {
             setOnClickListener {
-                Toast.makeText(this@MainActivity, "You clicked meH.", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this@MainActivity, HesapOlustur::class.java)
+                startActivity(intent)
             }
             setBackgroundColor(Color.parseColor("#916DD5"))
             text = "Hesap Oluştur"
