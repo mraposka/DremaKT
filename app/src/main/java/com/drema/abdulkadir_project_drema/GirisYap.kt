@@ -4,7 +4,15 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlinx.coroutines.*
 
 class GirisYap : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -12,13 +20,70 @@ class GirisYap : AppCompatActivity() {
         setContentView(R.layout.activity_giris_yap)
         val loginLink: TextView = findViewById(R.id.registerLink)
         val loginButton: Button = findViewById(R.id.loginButton)
+        val usernameEditText: EditText = findViewById(R.id.usernameEditText)
+        val passwordEditText: EditText = findViewById(R.id.passwordEditText)
         loginButton.setOnClickListener {
-            val intent = Intent(this@GirisYap, Anasayfa::class.java)
-            startActivity(intent)
+            fetchUsers(passwordEditText.text.toString(),usernameEditText.text.toString());
         }
         loginLink.setOnClickListener {
             val intent = Intent(this@GirisYap, HesapOlustur::class.java)
             startActivity(intent)
         }
     }
+
+    fun fetchUsers(passwordInput: String, usernameInput: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val urlString = "https://drema.info/api/ruya_user/read.php"
+            val url = URL(urlString)
+            val connection = url.openConnection() as HttpURLConnection
+
+            try {
+                connection.requestMethod = "GET"
+                connection.connect()
+
+                val responseCode = connection.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val inputStream = connection.inputStream
+                    val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+                    val responseString = bufferedReader.use { it.readText() }
+
+                    // JSON dönüşümü
+                    val jsonObject = JSONObject(responseString)
+                    val usersArray = jsonObject.getJSONArray("users")
+
+                    // Arama işlemi
+                    for (i in 0 until usersArray.length()) {
+                        val user = usersArray.getJSONObject(i)
+                        val userName = user.getString("user_name")
+                        val password = user.getString("user_pass")
+                        System.out.println(userName+" "+usernameInput);
+                        System.out.println(password+" "+passwordInput);
+                        if (userName == usernameInput && password == passwordInput) {
+                            // Aradığınız kullanıcıyı buldunuz
+                            val userEmail = user.getString("user_mail")
+                            val userId = user.getString("user_id")
+
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(
+                                    this@GirisYap,
+                                    "Bulunan Kullanıcı Email: $userEmail ID: $userId",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                } else {
+                    println("HTTP Hatası: $responseCode")
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("HTTP Hatası:1")
+            } finally {
+                connection.disconnect()
+                println("HTTP Hatası:2")
+            }
+        }
+    }
+
 }
