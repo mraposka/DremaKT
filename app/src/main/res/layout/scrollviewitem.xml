@@ -2,18 +2,24 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@android:color/darker_gray">
-
+        <TextView
+            android:id="@+id/tabir"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ben başlangıçta gizliyim!"
+            android:visibility="gone"
+            tools:ignore="MissingConstraints" />
         <ImageView
             android:id="@+id/leftImage"
-            android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:src="@drawable/load"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_percent="0.05" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Ortadaki yazı -->
         <TextView
@@ -25,7 +31,6 @@
             app:layout_constraintEnd_toStartOf="@id/rightText"
             app:layout_constraintStart_toEndOf="@id/leftImage"
             app:layout_constraintTop_toTopOf="parent" />
-
         <TextView
             android:id="@+id/rightText"
             android:layout_width="wrap_content"
@@ -34,14 +39,13 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@id/rightImage"
             app:layout_constraintTop_toTopOf="parent" />
-
         <ImageView
             android:id="@+id/rightImage"
             android:layout_width="0dp"
-            android:layout_height="60dp"
+            android:layout_height="40dp"
             android:src="@drawable/arrow"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_percent="0.05" />
+            app:layout_constraintWidth_percent="0.2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

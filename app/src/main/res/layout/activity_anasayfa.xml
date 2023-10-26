@@ -162,13 +162,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:id="@+id/ruyaLinearLayout">
+                android:id="@+id/ruyaLinearLayout" >
 
-                <!-- Nesneyi ekliyoruz -->
+                <!-- Nesne
                 <include layout="@layout/scrollviewitem" />
                 <Space
                     android:layout_width="match_parent"
-                    android:layout_height="5dp" />
+                    android:layout_height="5dp" />-->
             </LinearLayout>
 
         </ScrollView>

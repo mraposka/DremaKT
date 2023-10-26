@@ -21,6 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Kullanıcı Adı"
+            android:text="Admin"
             android:inputType="text"
             android:layout_marginTop="16dp"/>
 
@@ -29,6 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Şifre"
+            android:text="123"
             android:inputType="textPassword"
             android:layout_marginTop="8dp"/>
 

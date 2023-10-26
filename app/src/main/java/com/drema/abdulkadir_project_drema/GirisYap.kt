@@ -69,6 +69,8 @@ class GirisYap : AppCompatActivity() {
                                     "Bulunan Kullanıcı Email: $userEmail ID: $userId",
                                     Toast.LENGTH_SHORT
                                 ).show()
+                                val intent = Intent(this@GirisYap, Anasayfa::class.java)
+                                startActivity(intent)
                             }
                         }
                     }
