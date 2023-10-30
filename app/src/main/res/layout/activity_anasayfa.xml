@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
     <!-- ImageView containing the "x" image -->
     <ImageView
         android:id="@+id/x_image"
@@ -45,11 +44,11 @@
         android:layout_height="0dp"
         android:scaleType="centerCrop"
         android:src="@drawable/logo"
-        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintHeight_percent="0.21"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="@id/logoGuideline"
-        app:layout_constraintWidth_percent="0.35" />
+        app:layout_constraintWidth_percent="0.4" />
 
     <ImageView
         android:id="@+id/settings"
@@ -174,8 +173,5 @@
         </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-    <!-- Diğer bileşenler (eğer varsa) -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

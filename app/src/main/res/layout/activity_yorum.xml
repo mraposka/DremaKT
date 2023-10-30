@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Yorum">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="7.5" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="5"
+            android:gravity="start"
+            android:id="@+id/ruya"
+            android:text="ruya"
+            android:textStyle="bold"
+            android:textColor="#3E206D"
+            android:textSize="32sp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="40">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:id="@+id/tabir"
+                android:layout_weight="40"
+                android:text="TabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabiTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirabirTabirTabirrTabirTabirTabirTabirTabirTabirTabirTabirTabirTabirTab"
+                android:textColor="#3E206D"
+                android:textSize="24sp" />
+        </ScrollView>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:id="@+id/imageScroll"
+            android:layout_height="0dp"
+            android:layout_weight="2.5"
+            android:src="@drawable/down" />
+        <!-- Alt Boşluk (%10) -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="10" />
+
+        <!-- İki Buton Alt Alta -->
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#3E206D"
+            android:text="Tekrar Yorumlat"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#DADADA"
+            android:text="Yorumu Sil"
+            android:textColor="#000000" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

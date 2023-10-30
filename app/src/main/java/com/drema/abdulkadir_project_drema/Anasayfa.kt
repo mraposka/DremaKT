@@ -1,40 +1,55 @@
 package com.drema.abdulkadir_project_drema
 
 import android.annotation.SuppressLint
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import io.ktor.client.request.*
-import io.ktor.http.*
-import androidx.appcompat.app.AppCompatActivity
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.lifecycleScope
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import java.net.URL
-import java.text.SimpleDateFormat
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Response
-import java.io.IOException
-import java.util.Locale
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.json.JSONObject
+import java.io.IOException
+import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @Serializable
@@ -57,11 +72,17 @@ data class Ruya(
     val status: String
 )
 
+data class NewRuya(
+    val ruya: String,
+    val tabir: String,
+    val user_id: String,
+    val date_asked: String
+)
+
 interface RuyaResponseCallback {
     fun onSuccess(response: RuyaResponse)
     fun onFailure(exception: Throwable)
 }
-
 
 class Anasayfa() : AppCompatActivity(), Parcelable {
     constructor(parcel: Parcel) : this() {
@@ -70,32 +91,71 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_anasayfa)
+        val settings = findViewById<ImageView>(R.id.settings)
+        settings.setOnClickListener {
+            val intent = Intent(this@Anasayfa, Yorum::class.java)
+            intent.putExtra("ruya", "ruyatex")
+            intent.putExtra("tabir", "tabirtex")
+            intent.putExtra("id", "1")
+            startActivity(intent)
+        }
         var istanbulTime: String = "";
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
             istanbulTime = getIstanbulTimeFormatted()
             println("TEEST" + istanbulTime)
         }
+        //Timer
         fetchRuyaData(object : RuyaResponseCallback {
             @SuppressLint("MissingInflatedId")
             override fun onSuccess(response: RuyaResponse) {
+                try {
+                    findViewById<LinearLayout>(R.id.ruyaLinearLayout).removeAllViews()
+                } catch (e: Exception) {
+                }
                 response.ruyas.forEach {
-                    if(it.status!="-1"){
+                    if (it.status != "-1") {
                         val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
-                        val itemLayout = LayoutInflater.from(this@Anasayfa).inflate(R.layout.scrollviewitem, null)
+                        val itemLayout = LayoutInflater.from(this@Anasayfa)
+                            .inflate(R.layout.scrollviewitem, null)
                         val centerText = itemLayout.findViewById<TextView>(R.id.centerText)
                         val rightText = itemLayout.findViewById<TextView>(R.id.rightText)
                         val leftImage = itemLayout.findViewById<ImageView>(R.id.leftImage)
                         val tabir = itemLayout.findViewById<TextView>(R.id.tabir)
+                        val ruya = itemLayout.findViewById<TextView>(R.id.ruya)
+                        val id = itemLayout.findViewById<TextView>(R.id.id)
+                        tabir.text = it.tabir
+                        id.text = it.ruya_id.toString()
                         val space = Space(this@Anasayfa)
                         val params =
                             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 5)
-                        leftImage.setImageResource(if (it.tabir != "null") R.drawable.load else R.drawable.tick)
+                        leftImage.setImageResource(if (it.tabir == "null") R.drawable.load else R.drawable.tick)
                         container.addView(itemLayout)
                         rightText.text =
-                            getDifferenceInMinutes(it.date_asked, istanbulTime).toString() + " dk"
-                        centerText.text = it.ruya.substring(0, 30)
+                            getDifferenceInMinutes(
+                                addHourToDateTime(it.date_asked, 1),
+                                istanbulTime
+                            ).toString() + " dk"
+                        if (it.tabir == "null") {
+                            if (it.ruya.length >= 30)
+                                centerText.text = it.ruya.substring(0, 30)
+                            else centerText.text = it.ruya
+                        } else {
+                            centerText.text = "Rüya yorumunu gör"
+                            rightText.text="";
+                        }
+
                         tabir.text = it.tabir
+                        centerText.setOnClickListener {
+                            if (tabir.text != "null") {
+                                val intent = Intent(this@Anasayfa, Yorum::class.java)
+                                intent.putExtra("ruya", ruya.text)
+                                intent.putExtra("tabir", tabir.text)
+                                intent.putExtra("id", id.text)
+                                startActivity(intent)
+                            } else
+                                ImagePop("0", this@Anasayfa)
+                        }
                         space.layoutParams = params
                         container.addView(space)
                     }
@@ -105,21 +165,38 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
             override fun onFailure(exception: Throwable) {
             }
         })
+        //Timer
         val edit_text: EditText = findViewById(R.id.edit_text)
         val yorumla_button: Button = findViewById(R.id.yorumla_button)
 
         yorumla_button.setOnClickListener {
-            val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
-            val itemLayout = LayoutInflater.from(this).inflate(R.layout.scrollviewitem, null)
-            val centerText = itemLayout.findViewById<TextView>(R.id.centerText)
-            val leftImage = itemLayout.findViewById<ImageView>(R.id.leftImage)
-            val space = Space(this)
-            val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 5)
-            leftImage.setImageResource(R.drawable.load)
-            container.addView(itemLayout)
-            centerText.text = edit_text.text.substring(0, 20)
-            space.layoutParams = params
-            container.addView(space)
+            hideKeyboard(this, edit_text)
+            var res = "";
+            val userId = getUserIdFromPreferences(this)
+            lifecycleScope.launch(Dispatchers.IO) {
+                val result = addFunction(edit_text.text.toString(), userId)
+                res = result;
+                println("res:" + res)
+                withContext(Dispatchers.Main) {
+                    ImagePop(res, this@Anasayfa)
+                }
+            }
+            if (res == "1") {
+                val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
+                val itemLayout = LayoutInflater.from(this).inflate(R.layout.scrollviewitem, null)
+                val centerText = itemLayout.findViewById<TextView>(R.id.centerText)
+                val leftImage = itemLayout.findViewById<ImageView>(R.id.leftImage)
+                val space = Space(this)
+                val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 5)
+                leftImage.setImageResource(R.drawable.load)
+                container.addView(itemLayout)
+                centerText.text = edit_text.text.substring(0, 20)
+                centerText.setOnClickListener {
+                    ImagePop("0", this@Anasayfa)
+                }
+                space.layoutParams = params
+                container.addView(space)
+            }
         }
         edit_text.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -192,16 +269,131 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
     }
 }
 
+fun addHourToDateTime(dateTimeString: String, hourToAdd: Int): String {
+    try {
+        // Verilen tarih ve saat formatı
+        val sdf = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault())
+
+        // Verilen tarih ve saati tarih nesnesine dönüştür
+        val date = sdf.parse(dateTimeString)
+
+        // Saati eklemek için Calendar nesnesi kullan
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        calendar.add(Calendar.HOUR_OF_DAY, hourToAdd)
+
+        // Sonucu istediğiniz tarih/saat formatına dönüştür
+        val modifiedDate = sdf.format(calendar.time)
+
+        return modifiedDate
+    } catch (e: Exception) {
+        e.printStackTrace()
+        return dateTimeString // Hata durumunda orijinal tarih/saat değeri geri döner
+    }
+}
+
+fun ImagePop(imageId: String, ctx: Context) {
+    val imageView = ImageView(ctx)
+    imageView.setImageResource(if (imageId == "1") R.drawable.gonderildi else if (imageId == "-1") R.drawable.limit else R.drawable.wait)
+    val alertDialog = AlertDialog.Builder(ctx)
+        .setView(imageView)
+        .create()
+    val backgroundColor = Color.parseColor("#3A3A3A")
+    val alphaValue = 165
+    val colorDrawable = ColorDrawable(backgroundColor)
+    colorDrawable.alpha = alphaValue
+    alertDialog.window?.setBackgroundDrawable(colorDrawable)
+    imageView.alpha = 1.0f
+    val layoutParams = WindowManager.LayoutParams()
+    layoutParams.copyFrom(alertDialog.window?.attributes)
+    layoutParams.height =
+        ViewGroup.LayoutParams.MATCH_PARENT // Eğer resmin yüksekliği de ekran yüksekliği kadar olsunsa
+    alertDialog.window?.attributes = layoutParams
+    alertDialog.setCanceledOnTouchOutside(true)
+    alertDialog.show()
+
+
+    imageView.setOnClickListener {
+        alertDialog.dismiss()
+    }
+}
+
+fun hideKeyboard(context: Context, view: View) {
+    val inputMethodManager =
+        context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+}
+
+fun getUserIdFromPreferences(context: Context): String {
+    val sharedPreferences = context.getSharedPreferences("user_id", Context.MODE_PRIVATE)
+    return sharedPreferences.getString("UserId", "") ?: ""
+}
+
+suspend fun addFunction(ruyaEditorText: String, userId: String): String {
+    return try {
+        var istanbulTime: String = ""
+        val scope = CoroutineScope(Dispatchers.IO)
+        val response = scope.async {
+            istanbulTime = getIstanbulTimeFormatted()
+            val ruya =
+                NewRuya(
+                    ruya = ruyaEditorText,
+                    tabir = "null",
+                    user_id = userId,
+                    date_asked = istanbulTime
+                )
+
+            val jsonObject = JSONObject()
+            jsonObject.put("ruya", ruya.ruya)
+            jsonObject.put("tabir", ruya.tabir)
+            jsonObject.put("user_id", ruya.user_id)
+            jsonObject.put("date_asked", ruya.date_asked)
+
+            val client = OkHttpClient()
+
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val requestBody = jsonObject.toString().toRequestBody(mediaType)
+            println(jsonObject.toString())
+            val request = Request.Builder()
+                .url("https://drema.info/api/ruya_tabir/create.php")
+                .post(requestBody)
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful && response.code == 201) {
+                    "1"
+                } else {
+                    val result = response.body?.string()
+                    val jsonResponse = JSONObject(result)
+                    val message = jsonResponse.getString("message")
+
+                    println(message)
+                    if (message.contains("limit")) {
+                        "-1"
+                    } else {
+                        "0"
+                    }
+                }
+            }
+        }
+        response.await()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        "0"
+    }
+}
+
+
 fun getIstanbulTimeFormatted(): String {
     return try {
         val timeServerUrl = "https://worldtimeapi.org/api/timezone/Europe/Istanbul.txt"
         val response = URL(timeServerUrl).readText()
         val lines = response.lines()
-        var returnVal="";
+        var returnVal = "";
         for (line in lines) {
             if (line.startsWith("datetime:")) {
-                val dateTimeString = line.replace("datetime: ","")
-                println("Time:"+line)
+                val dateTimeString = line.replace("datetime: ", "")
+                println("Time:" + line)
                 if (dateTimeString.isNotEmpty()) {
                     val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.getDefault())
                     val istanbulTime = sdf.parse(dateTimeString)
@@ -226,7 +418,7 @@ fun getDifferenceInMinutes(dateStr1: String, dateStr2: String): Long? {
 
         val diff: Long = date2.time - date1.time
 
-        return TimeUnit.MILLISECONDS.toMinutes(diff)
+        return Math.abs(TimeUnit.MILLISECONDS.toMinutes(diff))
     } catch (e: Exception) {
         e.printStackTrace()
     }

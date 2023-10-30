@@ -1,5 +1,6 @@
 package com.drema.abdulkadir_project_drema
 
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -23,7 +24,7 @@ class GirisYap : AppCompatActivity() {
         val usernameEditText: EditText = findViewById(R.id.usernameEditText)
         val passwordEditText: EditText = findViewById(R.id.passwordEditText)
         loginButton.setOnClickListener {
-            fetchUsers(passwordEditText.text.toString(),usernameEditText.text.toString());
+            fetchUsers(passwordEditText.text.toString(), usernameEditText.text.toString());
         }
         loginLink.setOnClickListener {
             val intent = Intent(this@GirisYap, HesapOlustur::class.java)
@@ -56,19 +57,16 @@ class GirisYap : AppCompatActivity() {
                         val user = usersArray.getJSONObject(i)
                         val userName = user.getString("user_name")
                         val password = user.getString("user_pass")
-                        System.out.println(userName+" "+usernameInput);
-                        System.out.println(password+" "+passwordInput);
                         if (userName == usernameInput && password == passwordInput) {
-                            // Aradığınız kullanıcıyı buldunuz
+                            val userName = user.getString("user_name")
                             val userEmail = user.getString("user_mail")
+                            val userPass = user.getString("user_pass")
                             val userId = user.getString("user_id")
-
                             withContext(Dispatchers.Main) {
-                                Toast.makeText(
-                                    this@GirisYap,
-                                    "Bulunan Kullanıcı Email: $userEmail ID: $userId",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                saveUserInfoToPreferences(this@GirisYap, userId, "user_id")
+                                saveUserInfoToPreferences(this@GirisYap, userName, "user_name")
+                                saveUserInfoToPreferences(this@GirisYap, userEmail, "user_mail")
+                                saveUserInfoToPreferences(this@GirisYap, userPass, "user_pass")
                                 val intent = Intent(this@GirisYap, Anasayfa::class.java)
                                 startActivity(intent)
                             }
@@ -77,7 +75,6 @@ class GirisYap : AppCompatActivity() {
                 } else {
                     println("HTTP Hatası: $responseCode")
                 }
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 println("HTTP Hatası:1")
@@ -86,6 +83,13 @@ class GirisYap : AppCompatActivity() {
                 println("HTTP Hatası:2")
             }
         }
+    }
+
+    fun saveUserInfoToPreferences(context: Context, value: String, key: String) {
+        val sharedPreferences = context.getSharedPreferences(key, Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString(key, value)
+        editor.apply()  // Eğer değişikliklerin anında kaydedilmesini isterseniz 'commit()' kullanabilirsiniz, ancak 'apply()' genellikle daha hızlıdır.
     }
 
 }

@@ -1,5 +1,6 @@
 package com.drema.abdulkadir_project_drema
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
@@ -17,7 +18,11 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        val id = getUserInfoFromPreferences(this, "user_id")
+        if(id!=""){
+            val intent = Intent(this@MainActivity, Anasayfa::class.java)
+            startActivity(intent)
+        }
         val gridLayout = android.widget.GridLayout(this).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -77,6 +82,11 @@ class MainActivity : ComponentActivity() {
         }
 
         setContentView(gridLayout)
+    }
+
+    fun getUserInfoFromPreferences(context: Context, key: String): String {
+        val sharedPreferences = context.getSharedPreferences(key, Context.MODE_PRIVATE)
+        return sharedPreferences.getString(key, "") ?: ""
     }
     fun android.widget.GridLayout.addViewToGrid(
         view: android.view.View,
