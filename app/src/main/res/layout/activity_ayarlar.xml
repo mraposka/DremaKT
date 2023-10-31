@@ -7,14 +7,23 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal">
-
+        android:orientation="vertical">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:id="@+id/backButton"
+            android:layout_height="0dp"
+            android:scaleType="fitStart"
+            android:layout_weight="2.5"
+            android:src="@drawable/back" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2.5" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ayarlar"
-            android:textSize="24sp" />
+            android:text="Profil Ayarları"
+            android:textSize="32sp" />
 
         <EditText
             android:id="@+id/usernameEditText"
@@ -42,7 +51,7 @@
             android:id="@+id/logoffButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Kaydet" />
+            android:text="Çıkış" />
 
     </LinearLayout>
 </ScrollView>

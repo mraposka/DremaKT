@@ -73,16 +73,15 @@ data class Ruya(
 )
 
 data class NewRuya(
-    val ruya: String,
-    val tabir: String,
-    val user_id: String,
-    val date_asked: String
+    val ruya: String, val tabir: String, val user_id: String, val date_asked: String
 )
 
 interface RuyaResponseCallback {
     fun onSuccess(response: RuyaResponse)
     fun onFailure(exception: Throwable)
 }
+
+private lateinit var user_id: String
 
 class Anasayfa() : AppCompatActivity(), Parcelable {
     constructor(parcel: Parcel) : this() {
@@ -91,9 +90,10 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_anasayfa)
+        user_id = getUserIdFromPreferences(this@Anasayfa)
         val settings = findViewById<ImageView>(R.id.settings)
         settings.setOnClickListener {
-            val intent = Intent(this@Anasayfa, Yorum::class.java)
+            val intent = Intent(this@Anasayfa, Ayarlar::class.java)
             intent.putExtra("ruya", "ruyatex")
             intent.putExtra("tabir", "tabirtex")
             intent.putExtra("id", "1")
@@ -124,6 +124,7 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                         val tabir = itemLayout.findViewById<TextView>(R.id.tabir)
                         val ruya = itemLayout.findViewById<TextView>(R.id.ruya)
                         val id = itemLayout.findViewById<TextView>(R.id.id)
+                        val date = itemLayout.findViewById<TextView>(R.id.date)
                         tabir.text = it.tabir
                         id.text = it.ruya_id.toString()
                         val space = Space(this@Anasayfa)
@@ -131,18 +132,15 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 5)
                         leftImage.setImageResource(if (it.tabir == "null") R.drawable.load else R.drawable.tick)
                         container.addView(itemLayout)
-                        rightText.text =
-                            getDifferenceInMinutes(
-                                addHourToDateTime(it.date_asked, 1),
-                                istanbulTime
-                            ).toString() + " dk"
+                        rightText.text = getDifferenceInMinutes(
+                            addHourToDateTime(it.date_asked, 1), istanbulTime
+                        ).toString() + " dk"
                         if (it.tabir == "null") {
-                            if (it.ruya.length >= 30)
-                                centerText.text = it.ruya.substring(0, 30)
+                            if (it.ruya.length >= 30) centerText.text = it.ruya.substring(0, 30)
                             else centerText.text = it.ruya
                         } else {
                             centerText.text = "Rüya yorumunu gör"
-                            rightText.text="";
+                            rightText.text = "";
                         }
 
                         tabir.text = it.tabir
@@ -152,9 +150,10 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                                 intent.putExtra("ruya", ruya.text)
                                 intent.putExtra("tabir", tabir.text)
                                 intent.putExtra("id", id.text)
+                                intent.putExtra("date", date.text)
+
                                 startActivity(intent)
-                            } else
-                                ImagePop("0", this@Anasayfa)
+                            } else ImagePop("0", this@Anasayfa)
                         }
                         space.layoutParams = params
                         container.addView(space)
@@ -168,19 +167,18 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
         //Timer
         val edit_text: EditText = findViewById(R.id.edit_text)
         val yorumla_button: Button = findViewById(R.id.yorumla_button)
-
         yorumla_button.setOnClickListener {
             hideKeyboard(this, edit_text)
             var res = "";
-            val userId = getUserIdFromPreferences(this)
             lifecycleScope.launch(Dispatchers.IO) {
-                val result = addFunction(edit_text.text.toString(), userId)
+                val result = addFunction(edit_text.text.toString())
                 res = result;
                 println("res:" + res)
                 withContext(Dispatchers.Main) {
                     ImagePop(res, this@Anasayfa)
                 }
             }
+            edit_text.text.clear()
             if (res == "1") {
                 val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
                 val itemLayout = LayoutInflater.from(this).inflate(R.layout.scrollviewitem, null)
@@ -203,10 +201,8 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (edit_text.text.length > 20)
-                    yorumla_button.setBackgroundColor(Color.parseColor("#3E206D"));
-                else
-                    yorumla_button.setBackgroundColor(Color.parseColor("#dadada"));
+                if (edit_text.text.length > 20) yorumla_button.setBackgroundColor(Color.parseColor("#3E206D"));
+                else yorumla_button.setBackgroundColor(Color.parseColor("#dadada"));
             }
 
             override fun afterTextChanged(s: Editable?) {
@@ -236,12 +232,10 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
         val client = OkHttpClient()
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
-        val requestBody = """{ "user_id": "26" }""".toRequestBody(mediaType)
+        val requestBody = """{ "user_id": "$user_id" }""".toRequestBody(mediaType)
 
-        val request = Request.Builder()
-            .url("https://drema.info/api/ruya_tabir/read_one.php")
-            .post(requestBody)
-            .build()
+        val request = Request.Builder().url("https://drema.info/api/ruya_tabir/read_one.php")
+            .post(requestBody).build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -295,9 +289,7 @@ fun addHourToDateTime(dateTimeString: String, hourToAdd: Int): String {
 fun ImagePop(imageId: String, ctx: Context) {
     val imageView = ImageView(ctx)
     imageView.setImageResource(if (imageId == "1") R.drawable.gonderildi else if (imageId == "-1") R.drawable.limit else R.drawable.wait)
-    val alertDialog = AlertDialog.Builder(ctx)
-        .setView(imageView)
-        .create()
+    val alertDialog = AlertDialog.Builder(ctx).setView(imageView).create()
     val backgroundColor = Color.parseColor("#3A3A3A")
     val alphaValue = 165
     val colorDrawable = ColorDrawable(backgroundColor)
@@ -326,38 +318,28 @@ fun hideKeyboard(context: Context, view: View) {
 
 fun getUserIdFromPreferences(context: Context): String {
     val sharedPreferences = context.getSharedPreferences("user_id", Context.MODE_PRIVATE)
-    return sharedPreferences.getString("UserId", "") ?: ""
+    return sharedPreferences.getString("user_id", "") ?: ""
 }
 
-suspend fun addFunction(ruyaEditorText: String, userId: String): String {
+suspend fun addFunction(ruyaEditorText: String): String {
     return try {
         var istanbulTime: String = ""
         val scope = CoroutineScope(Dispatchers.IO)
         val response = scope.async {
             istanbulTime = getIstanbulTimeFormatted()
-            val ruya =
-                NewRuya(
-                    ruya = ruyaEditorText,
-                    tabir = "null",
-                    user_id = userId,
-                    date_asked = istanbulTime
-                )
-
             val jsonObject = JSONObject()
-            jsonObject.put("ruya", ruya.ruya)
-            jsonObject.put("tabir", ruya.tabir)
-            jsonObject.put("user_id", ruya.user_id)
-            jsonObject.put("date_asked", ruya.date_asked)
+            jsonObject.put("ruya", ruyaEditorText)
+            jsonObject.put("tabir", "null")
+            jsonObject.put("user_id", user_id)
+            jsonObject.put("date_asked", istanbulTime)
 
             val client = OkHttpClient()
 
             val mediaType = "application/json; charset=utf-8".toMediaType()
             val requestBody = jsonObject.toString().toRequestBody(mediaType)
             println(jsonObject.toString())
-            val request = Request.Builder()
-                .url("https://drema.info/api/ruya_tabir/create.php")
-                .post(requestBody)
-                .build()
+            val request = Request.Builder().url("https://drema.info/api/ruya_tabir/create.php")
+                .post(requestBody).build()
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful && response.code == 201) {
@@ -416,9 +398,9 @@ fun getDifferenceInMinutes(dateStr1: String, dateStr2: String): Long? {
         val date1: Date = format.parse(dateStr1)
         val date2: Date = format.parse(dateStr2)
 
-        val diff: Long = date2.time - date1.time
+        val diff: Long = date1.time - date2.time
 
-        return Math.abs(TimeUnit.MILLISECONDS.toMinutes(diff))
+        return if(TimeUnit.MILLISECONDS.toMinutes(diff)<0) 0 else TimeUnit.MILLISECONDS.toMinutes(diff)
     } catch (e: Exception) {
         e.printStackTrace()
     }

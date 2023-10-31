@@ -12,11 +12,21 @@
         android:background="@color/white"
         android:orientation="vertical"
         android:padding="16dp">
-
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="7.5" />
+            android:layout_weight="5" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:id="@+id/backButton"
+            android:layout_height="0dp"
+            android:scaleType="fitStart"
+            android:layout_weight="5"
+            android:src="@drawable/back" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2.5" />
 
         <TextView
             android:layout_width="match_parent"
@@ -58,6 +68,7 @@
         <!-- İki Buton Alt Alta -->
         <Button
             android:layout_width="match_parent"
+            android:id="@+id/againButton"
             android:layout_height="wrap_content"
             android:backgroundTint="#3E206D"
             android:text="Tekrar Yorumlat"
@@ -67,6 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="#DADADA"
+            android:id="@+id/deleteButton"
             android:text="Yorumu Sil"
             android:textColor="#000000" />
     </LinearLayout>

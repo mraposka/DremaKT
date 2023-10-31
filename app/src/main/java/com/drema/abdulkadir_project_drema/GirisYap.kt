@@ -14,6 +14,7 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.coroutines.*
+import java.security.MessageDigest
 
 class GirisYap : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +58,7 @@ class GirisYap : AppCompatActivity() {
                         val user = usersArray.getJSONObject(i)
                         val userName = user.getString("user_name")
                         val password = user.getString("user_pass")
-                        if (userName == usernameInput && password == passwordInput) {
+                        if (userName == usernameInput && hash(passwordInput) == password) {
                             val userName = user.getString("user_name")
                             val userEmail = user.getString("user_mail")
                             val userPass = user.getString("user_pass")
@@ -84,7 +85,12 @@ class GirisYap : AppCompatActivity() {
             }
         }
     }
-
+    fun hash(text:String): String {
+        val bytes = text.toString().toByteArray()
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        return digest.fold("", { str, it -> str + "%02x".format(it) })
+    }
     fun saveUserInfoToPreferences(context: Context, value: String, key: String) {
         val sharedPreferences = context.getSharedPreferences(key, Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()

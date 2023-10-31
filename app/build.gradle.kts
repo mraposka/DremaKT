@@ -55,6 +55,7 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:1.6.7")
     implementation("io.ktor:ktor-client-json-jvm:1.6.7")
+    implementation("androidx.fragment:fragment:1.4.0")
     implementation("io.ktor:ktor-client-serialization-jvm:1.6.7")
     implementation("io.ktor:ktor-client-android:1.6.7")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
