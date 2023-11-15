@@ -7,17 +7,26 @@ import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.GridLayout.LayoutParams
-import android.widget.Toast
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
-import com.drema.abdulkadir_project_drema.ui.theme.Abdulkadir_Project_DremaTheme
+import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(applicationContext)
+        FirebaseMessaging.getInstance().token.addOnCompleteListener {
+            if (!it.isSuccessful) {
+                return@addOnCompleteListener
+            }
+
+            val token = it.result
+            println("TokenBu:"+token)
+        }
         val id = getUserInfoFromPreferences(this, "user_id")
         if(id!=""){
             val intent = Intent(this@MainActivity, Anasayfa::class.java)

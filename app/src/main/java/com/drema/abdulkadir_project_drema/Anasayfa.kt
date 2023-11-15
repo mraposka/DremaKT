@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.Parcel
 import android.os.Parcelable
 import android.text.Editable
@@ -33,7 +35,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okhttp3.Call
@@ -53,16 +57,6 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @Serializable
-data class RuyaRequest(
-    val user_id: String
-)
-
-@Serializable
-data class RuyaResponse(
-    val ruyas: List<Ruya>
-)
-
-@Serializable
 data class Ruya(
     val ruya_id: Int,
     val ruya: String,
@@ -72,8 +66,9 @@ data class Ruya(
     val status: String
 )
 
-data class NewRuya(
-    val ruya: String, val tabir: String, val user_id: String, val date_asked: String
+@Serializable
+class RuyaResponse(
+    val ruyas: List<Ruya>
 )
 
 interface RuyaResponseCallback {
@@ -105,66 +100,81 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
             istanbulTime = getIstanbulTimeFormatted()
             println("TEEST" + istanbulTime)
         }
-        //Timer
-        fetchRuyaData(object : RuyaResponseCallback {
-            @SuppressLint("MissingInflatedId")
-            override fun onSuccess(response: RuyaResponse) {
-                try {
-                    findViewById<LinearLayout>(R.id.ruyaLinearLayout).removeAllViews()
-                } catch (e: Exception) {
-                }
-                response.ruyas.forEach {
-                    if (it.status != "-1") {
-                        val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
-                        val itemLayout = LayoutInflater.from(this@Anasayfa)
-                            .inflate(R.layout.scrollviewitem, null)
-                        val centerText = itemLayout.findViewById<TextView>(R.id.centerText)
-                        val rightText = itemLayout.findViewById<TextView>(R.id.rightText)
-                        val leftImage = itemLayout.findViewById<ImageView>(R.id.leftImage)
-                        val tabir = itemLayout.findViewById<TextView>(R.id.tabir)
-                        val ruya = itemLayout.findViewById<TextView>(R.id.ruya)
-                        val id = itemLayout.findViewById<TextView>(R.id.id)
-                        val date = itemLayout.findViewById<TextView>(R.id.date)
-                        tabir.text = it.tabir
-                        id.text = it.ruya_id.toString()
-                        val space = Space(this@Anasayfa)
-                        val params =
-                            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 5)
-                        leftImage.setImageResource(if (it.tabir == "null") R.drawable.load else R.drawable.tick)
-                        container.addView(itemLayout)
-                        rightText.text = getDifferenceInMinutes(
-                            addHourToDateTime(it.date_asked, 1), istanbulTime
-                        ).toString() + " dk"
-                        if (it.tabir == "null") {
-                            if (it.ruya.length >= 30) centerText.text = it.ruya.substring(0, 30)
-                            else centerText.text = it.ruya
-                        } else {
-                            centerText.text = "Rüya yorumunu gör"
-                            rightText.text = "";
-                        }
+        val handler = Handler(Looper.getMainLooper())
+        val delay: Long = 5000 // 30 saniye
 
-                        tabir.text = it.tabir
-                        centerText.setOnClickListener {
-                            if (tabir.text != "null") {
-                                val intent = Intent(this@Anasayfa, Yorum::class.java)
-                                intent.putExtra("ruya", ruya.text)
-                                intent.putExtra("tabir", tabir.text)
-                                intent.putExtra("id", id.text)
-                                intent.putExtra("date", date.text)
-
-                                startActivity(intent)
-                            } else ImagePop("0", this@Anasayfa)
+        val runnable = object : Runnable {
+            override fun run() {
+                //Timer
+                fetchRuyaData(object : RuyaResponseCallback {
+                    @SuppressLint("MissingInflatedId")
+                    override fun onSuccess(response: RuyaResponse) {
+                        try {
+                            findViewById<LinearLayout>(R.id.ruyaLinearLayout).removeAllViews()
+                        } catch (e: Exception) {
                         }
-                        space.layoutParams = params
-                        container.addView(space)
+                        response.ruyas.forEach {
+                            if (it.status != "-1") {
+                                val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
+                                val itemLayout = LayoutInflater.from(this@Anasayfa)
+                                    .inflate(R.layout.scrollviewitem, null)
+                                val centerText = itemLayout.findViewById<TextView>(R.id.centerText)
+                                val rightText = itemLayout.findViewById<TextView>(R.id.rightText)
+                                val leftImage = itemLayout.findViewById<ImageView>(R.id.leftImage)
+                                val tabir = itemLayout.findViewById<TextView>(R.id.tabir)
+                                val ruya = itemLayout.findViewById<TextView>(R.id.ruya)
+                                val id = itemLayout.findViewById<TextView>(R.id.id)
+                                val date = itemLayout.findViewById<TextView>(R.id.date)
+                                tabir.text = it.tabir
+                                id.text = it.ruya_id.toString()
+                                val space = Space(this@Anasayfa)
+                                val params = LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.MATCH_PARENT, 5
+                                )
+                                leftImage.setImageResource(if (it.tabir == "null") R.drawable.load else R.drawable.tick)
+                                container.addView(itemLayout)
+                                rightText.text = getDifferenceInMinutes(
+                                    addHourToDateTime(it.date_asked, 1), istanbulTime
+                                ).toString() + " dk"
+                                if (it.tabir == "null") {
+                                    if (it.ruya.length >= 30) centerText.text =
+                                        it.ruya.substring(0, 30)
+                                    else centerText.text = it.ruya
+                                } else {
+                                    centerText.text = "Rüya yorumunu gör"
+                                    rightText.text = "";
+                                }
+
+                                tabir.text = it.tabir
+                                centerText.setOnClickListener {
+                                    if (tabir.text != "null") {
+                                        val intent = Intent(this@Anasayfa, Yorum::class.java)
+                                        intent.putExtra("ruya", ruya.text)
+                                        intent.putExtra("tabir", tabir.text)
+                                        intent.putExtra("id", id.text)
+                                        intent.putExtra("date", date.text)
+
+                                        startActivity(intent)
+                                    } else ImagePop("0", this@Anasayfa)
+                                }
+                                space.layoutParams = params
+                                container.addView(space)
+                            }
+                        }
                     }
-                }
-            }
 
-            override fun onFailure(exception: Throwable) {
+                    override fun onFailure(exception: Throwable) {
+                    }
+                })
+                //Timer
+
+                // Runnable'ı belirli bir süre sonra tekrar çalıştır
+                handler.postDelayed(this, delay)
             }
-        })
-        //Timer
+        }
+
+// İlk çalıştırmayı başlat
+        handler.postDelayed(runnable, delay)
         val edit_text: EditText = findViewById(R.id.edit_text)
         val yorumla_button: Button = findViewById(R.id.yorumla_button)
         yorumla_button.setOnClickListener {
@@ -233,7 +243,6 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
 
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val requestBody = """{ "user_id": "$user_id" }""".toRequestBody(mediaType)
-
         val request = Request.Builder().url("https://drema.info/api/ruya_tabir/read_one.php")
             .post(requestBody).build()
 
@@ -248,10 +257,16 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
 
-                    val ruyaResponse = Json.decodeFromString<RuyaResponse>(responseBody ?: "")
-
-                    runOnUiThread {
-                        callback.onSuccess(ruyaResponse)
+                    try {
+                        val ruyaResponse = Json.decodeFromString<RuyaResponse>(responseBody ?: "")
+                        runOnUiThread {
+                            callback.onSuccess(ruyaResponse)
+                        }
+                    } catch (e: SerializationException) {
+                        runOnUiThread {
+                            println(e.message)
+                            callback.onFailure(e)
+                        }
                     }
                 } else {
                     runOnUiThread {
@@ -259,6 +274,7 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                     }
                 }
             }
+
         })
     }
 }
@@ -350,7 +366,7 @@ suspend fun addFunction(ruyaEditorText: String): String {
                     val message = jsonResponse.getString("message")
 
                     println(message)
-                    if (message.contains("limit")) {
+                    if (message.length>40) {
                         "-1"
                     } else {
                         "0"
@@ -400,7 +416,9 @@ fun getDifferenceInMinutes(dateStr1: String, dateStr2: String): Long? {
 
         val diff: Long = date1.time - date2.time
 
-        return if(TimeUnit.MILLISECONDS.toMinutes(diff)<0) 0 else TimeUnit.MILLISECONDS.toMinutes(diff)
+        return if (TimeUnit.MILLISECONDS.toMinutes(diff) < 0) 0 else TimeUnit.MILLISECONDS.toMinutes(
+            diff
+        )
     } catch (e: Exception) {
         e.printStackTrace()
     }
