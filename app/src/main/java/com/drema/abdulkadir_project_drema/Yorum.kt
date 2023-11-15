@@ -28,7 +28,13 @@ class Yorum : AppCompatActivity() {
         val scroll = findViewById<ImageView>(R.id.imageScroll)
         val ruya = findViewById<TextView>(R.id.ruya)
         val tabir = findViewById<TextView>(R.id.tabir)
-        ruya.text=ruyaText+"-"+id
+        if (ruyaText != null) {
+            if (ruyaText.length >= 15)
+                if (ruyaText != null) {
+                    ruya.text=ruyaText.substring(0, 15)
+                }
+            else ruya.text = ruyaText
+        }
         tabir.text=tabirText
         if(tabir.text.length>450)
             scroll.visibility= View.VISIBLE

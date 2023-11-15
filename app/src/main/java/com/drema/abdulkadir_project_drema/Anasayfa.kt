@@ -126,6 +126,7 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                                 val id = itemLayout.findViewById<TextView>(R.id.id)
                                 val date = itemLayout.findViewById<TextView>(R.id.date)
                                 tabir.text = it.tabir
+                                ruya.text=it.ruya
                                 id.text = it.ruya_id.toString()
                                 val space = Space(this@Anasayfa)
                                 val params = LinearLayout.LayoutParams(
@@ -148,6 +149,7 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                                 tabir.text = it.tabir
                                 centerText.setOnClickListener {
                                     if (tabir.text != "null") {
+                                        println(ruya.text)
                                         val intent = Intent(this@Anasayfa, Yorum::class.java)
                                         intent.putExtra("ruya", ruya.text)
                                         intent.putExtra("tabir", tabir.text)
