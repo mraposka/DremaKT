@@ -115,6 +115,11 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                         }
                         response.ruyas.forEach {
                             if (it.status != "-1") {
+                                val scope = CoroutineScope(Dispatchers.IO)
+                                scope.launch {
+                                    istanbulTime = getIstanbulTimeFormatted()
+                                    println("TEEST" + istanbulTime)
+                                }
                                 val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
                                 val itemLayout = LayoutInflater.from(this@Anasayfa)
                                     .inflate(R.layout.scrollviewitem, null)
@@ -126,13 +131,18 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                                 val id = itemLayout.findViewById<TextView>(R.id.id)
                                 val date = itemLayout.findViewById<TextView>(R.id.date)
                                 tabir.text = it.tabir
-                                ruya.text=it.ruya
+                                ruya.text = it.ruya
                                 id.text = it.ruya_id.toString()
                                 val space = Space(this@Anasayfa)
                                 val params = LinearLayout.LayoutParams(
                                     LinearLayout.LayoutParams.MATCH_PARENT, 5
                                 )
-                                leftImage.setImageResource(if (it.tabir == "null") R.drawable.load else R.drawable.tick)
+                                if (it.status == "0" && it.tabir == "null")
+                                    leftImage.setImageResource(R.drawable.load)
+                                else if (it.status == "0" && it.tabir != "null")
+                                    leftImage.setImageResource(R.drawable.tick)
+                                else
+                                    leftImage.setImageResource(0)
                                 container.addView(itemLayout)
                                 rightText.text = getDifferenceInMinutes(
                                     addHourToDateTime(it.date_asked, 1), istanbulTime
@@ -145,8 +155,10 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                                     centerText.text = "Rüya yorumunu gör"
                                     rightText.text = "";
                                 }
-
+                                date.text=it.date_asked
                                 tabir.text = it.tabir
+                                val user_id = it.user_id
+                                val stat = it.status
                                 centerText.setOnClickListener {
                                     if (tabir.text != "null") {
                                         println(ruya.text)
@@ -155,6 +167,8 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                                         intent.putExtra("tabir", tabir.text)
                                         intent.putExtra("id", id.text)
                                         intent.putExtra("date", date.text)
+                                        intent.putExtra("stat", stat.toString())
+                                        intent.putExtra("user_id", user_id.toString())
 
                                         startActivity(intent)
                                     } else ImagePop("0", this@Anasayfa)
@@ -180,41 +194,50 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
         val edit_text: EditText = findViewById(R.id.edit_text)
         val yorumla_button: Button = findViewById(R.id.yorumla_button)
         yorumla_button.setOnClickListener {
-            hideKeyboard(this, edit_text)
-            var res = "";
-            lifecycleScope.launch(Dispatchers.IO) {
-                val result = addFunction(edit_text.text.toString())
-                res = result;
-                println("res:" + res)
-                withContext(Dispatchers.Main) {
-                    ImagePop(res, this@Anasayfa)
+            if (edit_text.text.length > 20) {
+                hideKeyboard(this, edit_text)
+                var res = "";
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val result = addFunction(edit_text.text.toString())
+                    res = result;
+                    println("res:" + res)
+                    withContext(Dispatchers.Main) {
+                        ImagePop(res, this@Anasayfa)
+                    }
+                }
+                if (res == "1") {
+                    val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
+                    val itemLayout =
+                        LayoutInflater.from(this).inflate(R.layout.scrollviewitem, null)
+                    val centerText = itemLayout.findViewById<TextView>(R.id.centerText)
+                    val leftImage = itemLayout.findViewById<ImageView>(R.id.leftImage)
+                    val space = Space(this)
+                    val params =
+                        LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 5)
+                    leftImage.setImageResource(R.drawable.load)
+                    container.addView(itemLayout)
+                    centerText.text = edit_text.text.substring(0, 20)
+                    centerText.setOnClickListener {
+                        ImagePop("0", this@Anasayfa)
+                    }
+                    space.layoutParams = params
+                    container.addView(space)
                 }
             }
             edit_text.text.clear()
-            if (res == "1") {
-                val container = findViewById<LinearLayout>(R.id.ruyaLinearLayout)
-                val itemLayout = LayoutInflater.from(this).inflate(R.layout.scrollviewitem, null)
-                val centerText = itemLayout.findViewById<TextView>(R.id.centerText)
-                val leftImage = itemLayout.findViewById<ImageView>(R.id.leftImage)
-                val space = Space(this)
-                val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 5)
-                leftImage.setImageResource(R.drawable.load)
-                container.addView(itemLayout)
-                centerText.text = edit_text.text.substring(0, 20)
-                centerText.setOnClickListener {
-                    ImagePop("0", this@Anasayfa)
-                }
-                space.layoutParams = params
-                container.addView(space)
-            }
         }
         edit_text.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (edit_text.text.length > 20) yorumla_button.setBackgroundColor(Color.parseColor("#3E206D"));
-                else yorumla_button.setBackgroundColor(Color.parseColor("#dadada"));
+                if (edit_text.text.length > 20) {
+                    yorumla_button.isEnabled=true;
+                    yorumla_button.setBackgroundColor(Color.parseColor("#3E206D"));
+                } else {
+                    yorumla_button.setBackgroundColor(Color.parseColor("#dadada"));
+                    yorumla_button.isEnabled=false;
+                }
             }
 
             override fun afterTextChanged(s: Editable?) {
@@ -368,7 +391,7 @@ suspend fun addFunction(ruyaEditorText: String): String {
                     val message = jsonResponse.getString("message")
 
                     println(message)
-                    if (message.length>40) {
+                    if (message.length > 40) {
                         "-1"
                     } else {
                         "0"
