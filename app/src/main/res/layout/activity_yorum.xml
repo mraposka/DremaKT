@@ -71,7 +71,7 @@
             android:id="@+id/againButton"
             android:layout_height="wrap_content"
             android:backgroundTint="#3E206D"
-            android:text="Tekrar Yorumlat"
+            android:text="Tekrar Yorumlat(Aktif Değil)"
             android:textColor="#FFFFFF" />
 
         <Button

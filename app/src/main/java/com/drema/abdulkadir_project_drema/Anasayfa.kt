@@ -152,8 +152,12 @@ class Anasayfa() : AppCompatActivity(), Parcelable {
                                         it.ruya.substring(0, 30)
                                     else centerText.text = it.ruya
                                 } else {
-                                    centerText.text = "Rüya yorumunu gör"
-                                    rightText.text = "";
+                                    if(it.status=="1"){
+                                        if (it.ruya.length >= 30) centerText.text =
+                                            it.ruya.substring(0, 30)
+                                        else centerText.text=it.ruya
+                                        rightText.text = "";
+                                    }
                                 }
                                 date.text=it.date_asked
                                 tabir.text = it.tabir
